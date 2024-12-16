@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天気と旅行ガイド</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f8ff;
+        }
+        h1 {
+            color: #333;
+        }
+        #weather, #suggestion {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>天気と旅行ガイド</h1>
+    <button onclick="getWeatherAndSuggestion()">天気と旅行の提案を確認</button>
+    <div id="weather"></div>
+    <div id="suggestion"></div>
+
+    <script>
+        const API_KEY = 'YOUR_OPENWEATHERMAP_API_KEY'; // OpenWeatherMapのAPIキーを設定します。ここを実際のキーに置き換えてください。
+
+        async function getWeatherAndSuggestion() {
+            // ランダムな緯度と経度を生成する関数を使用して異なる場所の天気を取得
+            const { latitude, longitude } = getRandomCoordinates();
+
+            try {
+                // OpenWeatherMap APIから天気データを取得します。
+                const weatherResponse = await fetch(
+                
+                );
+
+                if (!weatherResponse.ok) { // レスポンスが失敗した場合にエラーメッセージをスローします。
+                    throw new Error(`天気データの取得に失敗しました: ${weatherResponse.statusText}`);
+                }
+
+                const weatherData = await weatherResponse.json(); // レスポンスをJSON形式に変換します。
+
+                // 天気データを画面に表示します。
+                const weatherDiv = document.getElementById('weather');
+
+                // 場所名を日本語表記で表示し、不明な場所はスキップします。
+                const locationName = weatherData.name;
+                if (!locationName) {
+                    getWeatherAndSuggestion(); // 不明な場所の場合は再試行します。
+                    return;
+                }
+
+                weatherDiv.innerHTML = `
+                    <h2>現在の天気</h2>
+                    <p><strong>場所:</strong> ${locationName}</p>
+                    <p><strong>気温:</strong> ${weatherData.main.temp}°C</p>
+                    <p><strong>天気:</strong> ${weatherData.weather[0].description}</p>
+                `;
+
+                // 天気データに基づいて活動を提案します。
+                suggestActivity(weatherData);
+            } catch (error) {
+                console.error('データ取得エラー:', error); // デバッグ用にエラーをコンソールに出力します。
+                alert('データ取得エラー: ' + error.message); // データ取得中のエラーをユーザーに通知します。
+            }
+        }
+
+        function getRandomCoordinates() {
+            // ランダムな緯度と経度を生成します。
+            const latitude = (Math.random() * 180 - 90).toFixed(6); // 緯度は-90から90の範囲
+            const longitude = (Math.random() * 360 - 180).toFixed(6); // 経度は-180から180の範囲
+            return { latitude, longitude };
+        }
+
+        function suggestActivity(weatherData) {
+            const suggestionDiv = document.getElementById('suggestion'); // 活動提案を表示する要素を取得します。
+            const temp = weatherData.main.temp; // 現在の気温を取得します。
+            const weather = weatherData.weather[0].main.toLowerCase(); // 天気の主な条件を小文字で取得します。
+
+            let suggestion; // 提案内容を格納する変数。
+
+            // 天気と気温に基づいて活動を提案します。
+            if (temp > 30) {
+                suggestion = '暑い日ですね！水分補給を忘れずに、プールや冷房の効いた場所で過ごしましょう。';
+            } else if (temp > 25 && weather.includes('clear')) {
+                suggestion = '今日は晴天です！ビーチに行くか、ハイキングはいかがですか？';
+            } else if (temp <= 25 && temp > 15) {
+                suggestion = '公園を散策したり、屋外カフェでのんびりするのに最適な天気です。';
+            } else if (temp <= 15 && temp > 5 && weather.includes('rain')) {
+                suggestion = '少し寒くて雨が降っています。博物館や屋内施設を訪れてみてはいかがですか？';
+            } else if (temp <= 5) {
+                suggestion = 'とても寒いですね！暖かい服装をして、温泉や室内アクティビティを楽しみましょう。';
+            } else {
+                suggestion = '暖かく過ごしてください！映画を見たり、近くのカフェでホットドリンクを楽しむのも良いですね。';
+            }
+
+            // 提案を画面に表示します。
+            suggestionDiv.innerHTML = `
+                <h2>旅行の提案</h2>
+                <p>${suggestion}</p>
+            `;
+        }
+    </script>
+</body>
+</html>
